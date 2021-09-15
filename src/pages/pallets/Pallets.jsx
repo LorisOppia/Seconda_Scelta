@@ -8,17 +8,22 @@ import {
   IonItemSliding,
   IonItemOptions,
   IonItemOption,
-  IonLabel,
   IonAlert,
   IonToast,
   IonActionSheet,
   IonIcon,
   IonLoading,
+  IonThumbnail,
+  IonImg,
+  IonInput,
+  IonModal,
+  IonLabel
 } from '@ionic/react'
 import { useState } from 'react'
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { App } from '@capacitor/app';
-import { settingsOutline } from 'ionicons/icons'
+import { settingsOutline, closeOutline } from 'ionicons/icons'
+import { Camera, CameraResultType, CameraSource} from '@capacitor/camera'
 
 const Pallets = () => {
 
@@ -28,16 +33,17 @@ const Pallets = () => {
   App.addListener('backButton', () => {
     BarcodeScanner.stopScan()
     setNascondi(false)
+    setImm()
+    setShowPhoto(false)
   })
 
   const invia = async () => {
     let carico
     let data = {}
     setShowLoading(true)
-    for (let i = 0;i<righe.length; i++){
+    for (let i = 0;i<elem.length; i++){
     carico = false
-    if (testo[i]==="Carico") {carico=true}
-    data = {"qr":righe[i].toString(),"carico":carico}
+    data = {"qr":elem[i].toString(),"carico":carico}
       try {
         await fetch(url,{
           method: 'POST', 
@@ -53,8 +59,7 @@ const Pallets = () => {
     catch(error){setShowToastErr(true); 
       setShowLoading(false) ;return}
   }
-  setRighe([])
-  setTesto([])
+  setElem([])
   setShowToastInvio(true)
   setShowLoading(false)
   }
@@ -67,68 +72,80 @@ const Pallets = () => {
   const startScan = async () => {
     setNascondi(true)
     const result = await BarcodeScanner.startScan();
-    if (result.hasContent) { setRighe(righe => [result.content, ...righe]);
-                            setTesto(testo => ["Carico", ...testo]);
+    if (result.hasContent) { setElem(righe => [result.content, ...righe]);
                             setNascondi(false); }
     }; 
     
-  const rimuovi = (x) => {
-    let app0 = [...testo]
-    let app = [...righe]
+  const rimuovi_elem = (x) => {
+    let app = [...elem]
     app.splice(x,1)
-    app0.splice(x,1)
-    setRighe(app)
-    setTesto(app0)
+    setElem(app)
+    };
+  
+  const rimuovi_foto = (x) => {
+    let app = [...foto]
+    app.splice(x,1)
+    setFoto(app)
+    setShowPhoto(false)
+    setImm()
     };
 
   const chiudi = (id) => {
     document.getElementById(id).close();
   };
 
-  const salva = () => {
-    setRigheSalva(righe);
-    setTestoSalva(testo)
-    setRighe([])
-    setTesto([])
+  const salva_elem = () => {
+    setElemSalva(elem);
+    setElem([])
+    };
+
+  const salva_foto = () => {
+    setListaFotoSalva(foto);
+    setFoto([])
     };
   
-  const recupera = () => {
-    setRighe(righeSalva)
-    setTesto(testoSalva)
-    setRigheSalva([])
-    setTestoSalva([])
+  const recupera_elem = () => {
+    setElem(elemSalva)
+    setElemSalva([])
   };
 
-  const changeAllToScarica = () => {
-    let app = []
-    for (let i=0;i<righe.length;i++){
-      app.push("Scarico")
-    }
-    setTesto(app);
-  }
+  const recupera_foto = () => {
+    setFoto(fotoSalva)
+    setListaFotoSalva([])
+  };
 
-  const changeAllToCarica = () => {
-    let app = []
-    for (let i=0;i<righe.length;i++){
-      app.push("Carico")
-    }
-    setTesto(app);
-  }
-
-  const [righe, setRighe] = useState([])
-  const [righeSalva, setRigheSalva] = useState([])
+  const [elem, setElem] = useState([])
+  const [elemSalva, setElemSalva] = useState([])
   const [nascondi, setNascondi] = useState(false)
-  const [testo, setTesto] = useState([])
-  const [testoSalva, setTestoSalva] = useState([])
-  const [showAlertRimuovi, setShowAlertRimuovi] = useState(false)
+  const [showAlertRimuovi_elem, setShowAlertRimuovi_elem] = useState(false)
+  const [showAlertRimuovi_foto, setShowAlertRimuovi_foto] = useState(false)
   const [showAlertInvia, setShowAlertInvia] = useState(false)
   const [showAlertNoElem, setShowAlertNoElem] = useState(false)
+  const [showAlertNoPhoto, setShowAlertNoPhoto] = useState(false)
   const [showToastInvio, setShowToastInvio] = useState(false)
   const [showToastErr, setShowToastErr] = useState(false)
-  const [showActionSheet, setShowActionSheet] = useState(false)
-  const [showAlertSalva, setShowAlertSalva] = useState(false)
+  const [opzioni, setOpzioni] = useState(false)
+  const [showAlertSalva_elem, setShowAlertSalva_elem] = useState(false)
+  const [showAlertSalva_foto, setShowAlertSalva_foto] = useState(false)
   const [showLoading, setShowLoading] = useState(false)
+  const [foto,setFoto] = useState([])
+  const [fotoSalva,setListaFotoSalva] = useState([])
+  const [imm,setImm] = useState(0)
+  const [showPhoto, setShowPhoto] = useState(false)
 
+  /*const aggiungi_foto = () => {
+      setListaFoto(listaFoto => [...listaFoto, "http://placekitten.com/g/200/300"])
+  }*/
+
+  const scatta = async () => {
+    const image = await Camera.getPhoto({
+      quality:100,
+      resultType: CameraResultType.Uri,
+      saveToGallery: false,
+      source: CameraSource.Camera
+    })
+    setFoto(listaFoto => [...listaFoto, image.webPath])
+};
 
   if (nascondi===false){
     return(
@@ -138,60 +155,86 @@ const Pallets = () => {
       </IonToolbar>
 
       <IonItem>
-        Elementi inseriti: {righe.length}
-        <IonButton color="light" size="medium" slot="end" onClick={()=>setShowActionSheet(true)}> <IonIcon icon={settingsOutline}/></IonButton>
+        Elementi da declassare: {elem.length}
+        <IonButton color="light" size="medium" slot="end" onClick={()=>setOpzioni(true)}> <IonIcon icon={settingsOutline}/></IonButton>
       </IonItem>
 
       <IonContent>
-        {righe.map((_,i) => (<IonItemSliding key={i} id={i}>
+        {elem.map((_,i) => (<IonItemSliding key={i} id={i}>
                                 <IonItemOptions side="end" >
-                                  <IonItemOption color="danger" onClick={() => {rimuovi(i); chiudi(i)}}>
+                                  <IonItemOption color="danger" onClick={() => {rimuovi_elem(i); chiudi(i)}}>
                                   Rimuovi
                                   </IonItemOption>
                                 </IonItemOptions>
                                 <IonItem>
-                                  {righe.length-i} - {righe[i]}
-                                  <IonLabel slot="end" onClick={() => {let app=[...testo]; if (testo[i]==="Carico") {app[i]="Scarico"}
-                                                                                            else {app[i]="Carico"}
-                                                                        setTesto(app)
-                                                                        }}>
-                                    {testo[i]}
-                                  </IonLabel>
+                                {elem[i]}
                                 </IonItem>
                               </IonItemSliding>))}
       </IonContent>
+      
+      <IonItem>
+      {foto.map((_,i) => (
+          <IonThumbnail key={i}>
+            <IonImg src={foto[i]} onClick={() => {setImm(i); setShowPhoto(true)}}/>
+          </IonThumbnail>
+      ))}
+      </IonItem>
+  
+      <IonItem>
+        Note:
+        <IonInput placeholder="Inserisci una nota"/>
+      </IonItem>
 
       <IonItem>
-            <IonButton slot="start" color="success" size="large" onClick={() => {if (righe.length===0) {setShowAlertNoElem(true)} 
+            <IonButton color="success" size="large" onClick={() => {if (elem.length===0) {setShowAlertNoElem(true)} 
                                                                                  else {setShowAlertInvia(true)}}}>
                     Invia
                 </IonButton>
 
-            <IonButton onClick={() => {/*setRighe(righe => [Math.floor(Math.random() * 50), ...righe]);
-                                       setTesto(testo => ["Carico", ...testo])*/ checkPermission()}} size="large" slot="end">       
+              <IonButton size="large" color="warning" onClick={() => scatta()}>
+                Scatta
+              </IonButton>
+              
+
+            <IonButton onClick={() => {setElem(righe => [Math.floor(Math.random() * 50), ...righe])/*checkPermission()*/}} size="large">       
                  Scan
             </IonButton>
       </IonItem>
 
       <IonAlert
-          isOpen={showAlertRimuovi}
-          onDidDismiss={() => setShowAlertRimuovi(false)}
+          isOpen={showAlertRimuovi_elem}
+          onDidDismiss={() => setShowAlertRimuovi_elem(false)}
           header={'Vuoi rimuovere tutti gli elementi?'}
           buttons={[
             {
               text: 'Annulla',
-              handler: () => {setShowAlertRimuovi(false)}
+              handler: () => {setShowAlertRimuovi_elem(false)}
             },
             {
               text: 'Rimuovi',
-              handler: () => { salva() }
+              handler: () => { salva_elem() }
             }
           ]}
-        /> 
+        />
+        <IonAlert
+        isOpen={showAlertRimuovi_foto}
+        onDidDismiss={() => setShowAlertRimuovi_foto(false)}
+        header={'Vuoi rimuovere tutte le foto?'}
+        buttons={[
+          {
+            text: 'Annulla',
+            handler: () => {setShowAlertRimuovi_foto(false)}
+          },
+          {
+            text: 'Rimuovi',
+            handler: () => { salva_foto() }
+          }
+        ]}
+      /> 
         <IonAlert
           isOpen={showAlertInvia}
           onDidDismiss={() => setShowAlertInvia(false)}
-          header={'Vuoi inviare ' + righe.length +' elementi?'}
+          header={'Vuoi inviare ' + elem.length +' elementi?'}
           buttons={[
             {
               text: 'Annulla',
@@ -204,13 +247,24 @@ const Pallets = () => {
           ]}
         />
         <IonAlert
-          isOpen={showAlertSalva}
-          onDidDismiss={() => setShowAlertSalva(false)}
+          isOpen={showAlertSalva_elem}
+          onDidDismiss={() => setShowAlertSalva_elem(false)}
           header={'Non ci sono elementi da recuperare'}
           buttons={[
             {
               text: 'Ok',
-              handler: () => {setShowAlertSalva(false)}
+              handler: () => {setShowAlertSalva_elem(false)}
+            }
+          ]}
+        />
+        <IonAlert
+          isOpen={showAlertSalva_foto}
+          onDidDismiss={() => setShowAlertSalva_foto(false)}
+          header={'Non ci sono foto da recuperare'}
+          buttons={[
+            {
+              text: 'Ok',
+              handler: () => {setShowAlertSalva_foto(false)}
             }
           ]}
         />
@@ -222,6 +276,17 @@ const Pallets = () => {
             {
               text: 'Ok',
               handler: () => {setShowAlertNoElem(false)}
+            }
+          ]}
+        />
+        <IonAlert
+          isOpen={showAlertNoPhoto}
+          onDidDismiss={() => setShowAlertNoPhoto(false)}
+          header={'Non ci sono foto'}
+          buttons={[
+            {
+              text: 'Ok',
+              handler: () => {setShowAlertNoPhoto(false)}
             }
           ]}
         />
@@ -243,25 +308,26 @@ const Pallets = () => {
           />
 
           <IonActionSheet 
-            isOpen={showActionSheet}
-            onDidDismiss={() => setShowActionSheet(false)}
+            isOpen={opzioni}
+            onDidDismiss={() => setOpzioni(false)}
             header= {"Opzioni"}
             buttons={[{
-              text: 'Rimuovi Tutti',
-              handler: () => {if (righe.length===0){setShowAlertNoElem(true)} 
-                              else {setShowAlertRimuovi(true)}}
-            },  {
-              text: 'Imposta tutti: Carico',
-              handler: () => { changeAllToCarica()}
+              text: 'Rimuovi tutti gli elementi',
+              handler: () => {if (elem.length===0){setShowAlertNoElem(true)} 
+                              else {setShowAlertRimuovi_elem(true)}}
             },{
-              text: 'Imposta tutti: Scarico',
-              handler: () => {changeAllToScarica()}
+              text: 'Rimuovi tutte le foto',
+              handler: () => {if (foto.length===0) {setShowAlertNoPhoto(true)}
+                              else {setShowAlertRimuovi_foto(true)}}
             },{
               text: 'Recupera elementi',
-              handler: () => {if (righeSalva.length===0) {setShowAlertSalva(true)}
-                              else {recupera()}}
-            },
-            ]}>
+              handler: () => {if (elemSalva.length===0) {setShowAlertSalva_elem(true)}
+                              else {recupera_elem()}}
+            },{
+              text: 'Recupera foto',
+              handler: () => {if (fotoSalva.length===0) {setShowAlertSalva_foto(true)}
+                              else {recupera_foto()}}
+            }]}>
         </IonActionSheet>
 
         <IonLoading
@@ -269,6 +335,14 @@ const Pallets = () => {
             onDidDismiss={() => setShowLoading(false)}
             message={'Invio in corso...'}
       />
+
+      <IonModal isOpen={showPhoto}>
+        <IonToolbar>
+          <IonButton slot="end" color="danger" onClick={() => rimuovi_foto(imm)}>Cancella</IonButton>
+        </IonToolbar>
+        <IonImg src={foto[imm]}>        
+          </IonImg>
+      </IonModal>
       
     </IonPage>
   )
