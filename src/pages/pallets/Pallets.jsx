@@ -17,18 +17,15 @@ import {
   IonImg,
   IonInput,
   IonModal,
-  IonLabel
+  IonLabel,
 } from '@ionic/react'
 import { useState } from 'react'
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { App } from '@capacitor/app';
-import { settingsOutline, closeOutline } from 'ionicons/icons'
+import { settingsOutline, arrowBackCircleOutline, arrowForwardCircleOutline } from 'ionicons/icons'
 import { Camera, CameraResultType, CameraSource} from '@capacitor/camera'
 
 const Pallets = () => {
-
-  let url = "http://127.0.0.1:8000/caricoScaricoPallets/"
-
 
   App.addListener('backButton', () => {
     BarcodeScanner.stopScan()
@@ -37,13 +34,36 @@ const Pallets = () => {
     setShowPhoto(false)
   })
 
-  const invia = async () => {
-    let carico
-    let data = {}
+  const inviaNote = async () => {
+    let url_note = "http://127.0.0.1:8000/declassamento/"
     setShowLoading(true)
-    for (let i = 0;i<elem.length; i++){
-    carico = false
-    data = {"qr":elem[i].toString(),"carico":carico}
+    let data = {"note": note}
+      try {
+        await fetch(url_note,{
+          method: 'POST', 
+          mode: 'cors', 
+          cache: 'no-cache', 
+          credentials: 'same-origin', 
+          headers: { 'Content-Type': 'application/json'},
+          redirect: 'follow',
+          referrerPolicy: 'no-referrer',
+          body: JSON.stringify(data) 
+      });
+  }
+    catch(error){setShowToastErr(true); 
+                 setShowLoading(false); return}
+  setNote()
+  setShowToastInvio(true)
+  setShowLoading(false)
+  get_id_testata()
+  }
+
+  const PostQR = async () => {
+    setShowLoading(true)
+    let data = {}
+    let url = "http://127.0.0.1:8000/codiceTestata/"
+    for (let i=0;i<elem.length;i++){
+      data = {"id_testata": idTestata, "qr":elem[i]}
       try {
         await fetch(url,{
           method: 'POST', 
@@ -57,12 +77,80 @@ const Pallets = () => {
       });
   }
     catch(error){setShowToastErr(true); 
-      setShowLoading(false) ;return}
-  }
-  setElem([])
+                 setShowLoading(false); return}
+    }
   setShowToastInvio(true)
   setShowLoading(false)
   }
+
+  const PostFoto = async () => {
+    setShowLoading(true)
+    let data = {}
+    let url = "http://127.0.0.1:8000/foto/"
+    for (let i=0;i<foto.length;i++){
+      data = {"id_testata": idTestata, "foto":foto[i]}
+      try {
+        await fetch(url,{
+          method: 'POST', 
+          mode: 'cors', 
+          cache: 'no-cache', 
+          credentials: 'same-origin', 
+          headers: { 'Content-Type': 'application/json'},
+          redirect: 'follow',
+          referrerPolicy: 'no-referrer',
+          body: JSON.stringify(data) 
+      });
+  }
+    catch(error){setShowToastErr(true); 
+                 setShowLoading(false); return}
+    }
+  setShowToastInvio(true)
+  setShowLoading(false)
+  }
+
+  const get_id_testata = async () => {
+    let url = "http://127.0.0.1:8000/declassamento/"
+    let json = []
+      await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => response.json())
+      .then(data => {json = data})
+      .catch((error) => {console.error('Error:', error)})
+
+      idTestata = json[json.length-1]["id"]   
+      PostQR()
+      PostFoto()
+      
+}
+
+  const get_id_articolo = async (barcode) => {
+    let url = "http://127.0.0.1:8000/codiceArticolo/"
+    let json = []
+      await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => response.json())
+      .then(data => {json = data})
+      .catch((error) => {console.error('Error:', error)})
+
+      if (elem.length===0) { for (let i=0;i<json.length;i++){ 
+                                      if (json[i]["qr"]===barcode) {setCodiceArticolo(json[i]["id_articolo"]);
+                                                                    setElem(elem => [json[i]["qr"], ...elem])} 
+                            } }
+      else { for (let i=0;i<json.length;i++){ 
+                      if (json[i]["qr"]===barcode) {
+                              if (json[i]["id_articolo"]===codiceArticolo) {setElem(elem => [json[i]["qr"], ...elem])}      //aggiungi errore
+                      }
+      }
+  }
+}
 
   const checkPermission = async () => {
     const status = await BarcodeScanner.checkPermission({ force: true });
@@ -72,9 +160,9 @@ const Pallets = () => {
   const startScan = async () => {
     setNascondi(true)
     const result = await BarcodeScanner.startScan();
-    if (result.hasContent) { setElem(righe => [result.content, ...righe]);
-                            setNascondi(false); }
-    }; 
+    if (result.hasContent) { setNascondi(false);
+                             get_id_articolo(result.content);}
+    };
     
   const rimuovi_elem = (x) => {
     let app = [...elem]
@@ -129,9 +217,14 @@ const Pallets = () => {
   const [showAlertSalva_foto, setShowAlertSalva_foto] = useState(false)
   const [showLoading, setShowLoading] = useState(false)
   const [foto,setFoto] = useState([])
+
   const [fotoSalva,setListaFotoSalva] = useState([])
   const [imm,setImm] = useState(0)
   const [showPhoto, setShowPhoto] = useState(false)
+  const [codiceArticolo, setCodiceArticolo] = useState()
+  const [note, setNote] = useState()
+  let idTestata
+
 
   /*const aggiungi_foto = () => {
       setListaFoto(listaFoto => [...listaFoto, "http://placekitten.com/g/200/300"])
@@ -140,11 +233,14 @@ const Pallets = () => {
   const scatta = async () => {
     const image = await Camera.getPhoto({
       quality:100,
-      resultType: CameraResultType.Uri,
-      saveToGallery: false,
+      resultType: CameraResultType.Base64,   //Uri, Base64, DataUrl
+      saveToGallery: true,
       source: CameraSource.Camera
     })
-    setFoto(listaFoto => [...listaFoto, image.webPath])
+
+    let imm = "data:image/png;base64," + image.base64String
+    setFoto(foto => [...foto, imm])
+    console.log(imm)
 };
 
   if (nascondi===false){
@@ -182,21 +278,21 @@ const Pallets = () => {
   
       <IonItem>
         Note:
-        <IonInput placeholder="Inserisci una nota"/>
+        <IonInput placeholder="Inserisci una nota" onIonChange={e => setNote(e.detail.value)}></IonInput>
+        
       </IonItem>
 
       <IonItem>
             <IonButton color="success" size="large" onClick={() => {if (elem.length===0) {setShowAlertNoElem(true)} 
-                                                                                 else {setShowAlertInvia(true)}}}>
+                                                                    else {setShowAlertInvia(true)}}}>
                     Invia
                 </IonButton>
 
               <IonButton size="large" color="warning" onClick={() => scatta()}>
                 Scatta
-              </IonButton>
-              
+              </IonButton>         
 
-            <IonButton onClick={() => {setElem(righe => [Math.floor(Math.random() * 50), ...righe])/*checkPermission()*/}} size="large">       
+            <IonButton onClick={() => {let x = Math.floor(Math.random() * 5); x = x.toString(); get_id_articolo(x) /*checkPermission()*/}} size="large">       
                  Scan
             </IonButton>
       </IonItem>
@@ -242,7 +338,7 @@ const Pallets = () => {
             },
             {
               text: 'Invia',
-              handler: () => {invia()}
+              handler: () => {inviaNote()}
             }
           ]}
         />
@@ -333,15 +429,18 @@ const Pallets = () => {
         <IonLoading
             isOpen={showLoading}
             onDidDismiss={() => setShowLoading(false)}
-            message={'Invio in corso...'}
+            message={"Invio in corso..."}
       />
 
       <IonModal isOpen={showPhoto}>
-        <IonToolbar>
-          <IonButton slot="end" color="danger" onClick={() => rimuovi_foto(imm)}>Cancella</IonButton>
+        
+        <IonImg src={foto[imm]} />        
+          <IonToolbar>
+        <IonButton slot="start" onClick={() => {if (imm>0) {setImm(imm => imm-1)}}}><IonIcon icon={arrowBackCircleOutline}/></IonButton>
+        <IonButton slot="end" onClick={() => {if (imm<foto.length-1) setImm(imm => imm+1)}}><IonIcon icon={arrowForwardCircleOutline}/></IonButton>
+
+          <IonButton color="danger" onClick={() => rimuovi_foto(imm)}>Cancella</IonButton>
         </IonToolbar>
-        <IonImg src={foto[imm]}>        
-          </IonImg>
       </IonModal>
       
     </IonPage>
