@@ -24,6 +24,7 @@ import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { App } from '@capacitor/app';
 import { settingsOutline, arrowBackCircleOutline, arrowForwardCircleOutline } from 'ionicons/icons'
 import { Camera, CameraResultType, CameraSource} from '@capacitor/camera'
+import { url_note, url_codiceTestata, url_foto, url_codiceArticolo } from "../../config/config";
 
 const Pallets = () => {
 
@@ -35,7 +36,7 @@ const Pallets = () => {
   })
 
   const inviaNote = async () => {
-    let url_note = "http://127.0.0.1:8000/declassamento/"
+    //let url_note = "http://127.0.0.1:8000/declassamento/"
     setShowLoading(true)
     let data = {"note": note}
       try {
@@ -53,6 +54,7 @@ const Pallets = () => {
     catch(error){setShowToastErr(true); 
                  setShowLoading(false); return}
   setNote()
+  set_input("input")
   setShowToastInvio(true)
   setShowLoading(false)
   get_id_testata()
@@ -61,11 +63,11 @@ const Pallets = () => {
   const PostQR = async () => {
     setShowLoading(true)
     let data = {}
-    let url = "http://127.0.0.1:8000/codiceTestata/"
+    //let url = "http://127.0.0.1:8000/codiceTestata/"
     for (let i=0;i<elem.length;i++){
       data = {"id_testata": idTestata, "qr":elem[i]}
       try {
-        await fetch(url,{
+        await fetch(url_codiceTestata,{
           method: 'POST', 
           mode: 'cors', 
           cache: 'no-cache', 
@@ -79,6 +81,7 @@ const Pallets = () => {
     catch(error){setShowToastErr(true); 
                  setShowLoading(false); return}
     }
+  setElem([]);
   setShowToastInvio(true)
   setShowLoading(false)
   }
@@ -86,11 +89,11 @@ const Pallets = () => {
   const PostFoto = async () => {
     setShowLoading(true)
     let data = {}
-    let url = "http://127.0.0.1:8000/foto/"
+    //let url = "http://127.0.0.1:8000/foto/"
     for (let i=0;i<foto.length;i++){
       data = {"id_testata": idTestata, "foto":foto[i]}
       try {
-        await fetch(url,{
+        await fetch(url_foto,{
           method: 'POST', 
           mode: 'cors', 
           cache: 'no-cache', 
@@ -104,14 +107,15 @@ const Pallets = () => {
     catch(error){setShowToastErr(true); 
                  setShowLoading(false); return}
     }
+    setFoto([]);
   setShowToastInvio(true)
   setShowLoading(false)
   }
 
   const get_id_testata = async () => {
-    let url = "http://127.0.0.1:8000/declassamento/"
+    //let url = "http://127.0.0.1:8000/declassamento/"
     let json = []
-      await fetch(url, {
+      await fetch(url_note, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -123,14 +127,14 @@ const Pallets = () => {
 
       idTestata = json[json.length-1]["id"]   
       PostQR()
-      PostFoto()
+      //PostFoto()
       
 }
 
   const get_id_articolo = async (barcode) => {
-    let url = "http://127.0.0.1:8000/codiceArticolo/"
+    //let url = "http://127.0.0.1:8000/codiceArticolo/"
     let json = []
-      await fetch(url, {
+      await fetch(url_codiceArticolo, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -151,6 +155,9 @@ const Pallets = () => {
       }
   }
 }
+const chiudi = (id) => {
+  document.getElementById(id).close();
+};
 
   const checkPermission = async () => {
     const status = await BarcodeScanner.checkPermission({ force: true });
@@ -178,10 +185,6 @@ const Pallets = () => {
     setImm()
     };
 
-  const chiudi = (id) => {
-    document.getElementById(id).close();
-  };
-
   const salva_elem = () => {
     setElemSalva(elem);
     setElem([])
@@ -200,6 +203,10 @@ const Pallets = () => {
   const recupera_foto = () => {
     setFoto(fotoSalva)
     setListaFotoSalva([])
+  };
+
+  const set_input = (id) => {
+    document.getElementById(id).value="";
   };
 
   const [elem, setElem] = useState([])
@@ -278,7 +285,7 @@ const Pallets = () => {
   
       <IonItem>
         Note:
-        <IonInput placeholder="Inserisci una nota" onIonChange={e => setNote(e.detail.value)}></IonInput>
+        <IonInput id="input" placeholder="Inserisci una nota" onIonChange={e => setNote(e.detail.value)}></IonInput>
         
       </IonItem>
 
