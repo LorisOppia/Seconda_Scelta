@@ -38,7 +38,9 @@ const Pallets = () => {
   const inviaNote = async () => {
     //let url_note = "http://127.0.0.1:8000/declassamento/"
     setShowLoading(true)
-    let data = {"note": note}
+    let data={};
+    if (note===""){data = {"note": "Nessuna Nota" }}
+    else {data = {"note": note}}
       try {
         await fetch(url_note,{
           method: 'POST', 
@@ -53,7 +55,7 @@ const Pallets = () => {
   }
     catch(error){setShowToastErr(true); 
                  setShowLoading(false); return}
-  setNote()
+  setNote("")
   set_input("input")
   setShowToastInvio(true)
   setShowLoading(false)
@@ -229,7 +231,7 @@ const chiudi = (id) => {
   const [imm,setImm] = useState(0)
   const [showPhoto, setShowPhoto] = useState(false)
   const [codiceArticolo, setCodiceArticolo] = useState()
-  const [note, setNote] = useState()
+  const [note, setNote] = useState("")
   let idTestata
 
 
