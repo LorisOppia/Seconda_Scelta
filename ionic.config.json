@@ -1,7 +1,0 @@
-{
-  "name": "geo-farmacie",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "react"
-}
