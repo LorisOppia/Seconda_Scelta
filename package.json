@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "dependencies": {
     "@capacitor-community/barcode-scanner": "^2.0.1",
-    "@capacitor/android": "3.2.0",
-    "@capacitor/core": "3.0.1",
+    "@capacitor/android": "3.2.2",
     "@capacitor/app": "^1.0.3",
     "@capacitor/camera": "^1.0.5",
+    "@capacitor/core": "3.0.1",
     "@capacitor/geolocation": "^1.0.2",
     "@ionic/pwa-elements": "^3.0.2",
     "@ionic/react": "^5.6.9",
     "@ionic/react-router": "^5.6.9",
     "axios": "^0.21.1",
+    "docx": "^6.0.3",
     "dom-parser": "^0.1.6",
     "history": "^5.0.0",
     "ionicons": "^5.5.1",
@@ -39,7 +40,7 @@
     "sync": "ionic cap sync",
     "start:android": "ionic cap run android -l --external --port=3000",
     "open:android": "ionic cap open android",
-    "start:androidProd": "ionic cap run android --prod"
+    "phone": "ionic cap run android --prod --target=52000512be283287"
   },
   "eslintConfig": {
     "extends": [

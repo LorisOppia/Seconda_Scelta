@@ -57,13 +57,10 @@ const Pallets = () => {
                  setShowLoading(false); return}
   setNote("")
   set_input("input")
-  setShowToastInvio(true)
-  setShowLoading(false)
   get_id_testata()
   }
 
   const PostQR = async () => {
-    setShowLoading(true)
     let data = {}
     //let url = "http://127.0.0.1:8000/codiceTestata/"
     for (let i=0;i<elem.length;i++){
@@ -88,7 +85,7 @@ const Pallets = () => {
   setShowLoading(false)
   }
 
-  const PostFoto = async () => {
+  /*const PostFoto = async () => {
     setShowLoading(true)
     let data = {}
     //let url = "http://127.0.0.1:8000/foto/"
@@ -109,10 +106,10 @@ const Pallets = () => {
     catch(error){setShowToastErr(true); 
                  setShowLoading(false); return}
     }
-    setFoto([]);
+  setFoto([]);
   setShowToastInvio(true)
   setShowLoading(false)
-  }
+  }*/
 
   const get_id_testata = async () => {
     //let url = "http://127.0.0.1:8000/declassamento/"
